@@ -252,5 +252,3 @@ def swap(base_token: dict, quote_token: dict, target_pool: str, input_token_amou
 
 
 
-connect('5YsYUzTAHjDLLUU1DjQ5wMtRMfGsDDPvfNzeL1bfwXA3SJrZuvF9XP6ozQqWDfBgcuM3fkBpH3ddC4VTDapueScC', 'https://api.mainnet-beta.solana.com')
-
