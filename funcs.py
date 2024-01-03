@@ -169,10 +169,6 @@ def create_market(base_token: dict, quote_token: dict, lot_size: int, max_tick_s
     }
 
     """
-
-    """
-    
-    """
     output = subprocess.run(f'yarn start ./js/src/utilsCreateMarket.js {base_token["address"]} {base_token["decimals"]} {base_token["symbol"]} {quote_token["address"]} {quote_token["decimals"]} {quote_token["symbol"]} {lot_size} {max_tick_size} {makeTxVersion}', shell=True, capture_output=True)
     stdout_lines = [str(line) for line in output.stdout.splitlines()]
     market_id = ''
