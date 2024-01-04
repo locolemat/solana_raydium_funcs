@@ -11,7 +11,7 @@ from solana.transaction import Transaction
 from moralis import sol_api
 from solders.pubkey import Pubkey
 
-import requests, json, os, sys, base58, subprocess
+import requests, json, os, sys, base58, subprocess, asyncio
 
 
 def get_secret_key(private_key: str):
@@ -114,7 +114,7 @@ def get_liquidity(token_address: str):
         return 'Request failed with status code ' + response.status_code
 
 
-def connect(secret_key: str | list, rcp_url: str):
+async def connect(secret_key: str | list, rcp_url: str):
     """
     Подключает скрипт к raydium-sdk.
     Требует secret key в формате строки либо массива чисел и url желаемого кластера.
@@ -150,7 +150,7 @@ def connect(secret_key: str | list, rcp_url: str):
     subprocess.run('yarn build', shell=True)
 
 
-def create_market(base_token: dict, quote_token: dict, lot_size: int, max_tick_size: int, makeTxVersion = True):
+async def create_market(base_token: dict, quote_token: dict, lot_size: int, max_tick_size: int, makeTxVersion = True):
     """
     Создаёт маркет для двух токенов.
 
@@ -182,7 +182,7 @@ def create_market(base_token: dict, quote_token: dict, lot_size: int, max_tick_s
 
 
 
-def create_liquidity_pool(base_token: dict, quote_token: dict, target_market_id: str, add_base_amount: int, add_quote_amount: int):
+async def create_liquidity_pool(base_token: dict, quote_token: dict, target_market_id: str, add_base_amount: int, add_quote_amount: int):
     """
     Создаёт пул ликвидности.
 
@@ -214,7 +214,7 @@ def create_liquidity_pool(base_token: dict, quote_token: dict, target_market_id:
 
     return {'success': True, 'error': ''}
 
-def swap(base_token: dict, quote_token: dict, target_pool: str, input_token_amount: int):
+async def swap(base_token: dict, quote_token: dict, target_pool: str, input_token_amount: int):
     """
     Свапает два токена.
 
