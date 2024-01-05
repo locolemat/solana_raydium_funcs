@@ -13,6 +13,8 @@ from solders.pubkey import Pubkey
 
 import requests, json, os, sys, base58, subprocess, asyncio
 
+YARN_WORKING_DIR = './solana_raydium_funcs'
+
 
 def get_relative_price(price_a: float, price_b: float):
     """
@@ -138,7 +140,7 @@ async def connect(secret_key: str | list, rcp_url: str):
     if len(actual_secret_key) != 64:
         return 'Некорректный секретный ключ - ключ должен содержать 64 символа.'
 
-    subprocess.run('yarn clean', shell=True)
+    subprocess.run('yarn --cwd {YARN_WORKING_DIR} clean', shell=True)
     
     lines = []
     with open('config.ts', 'r') as f:
@@ -153,7 +155,7 @@ async def connect(secret_key: str | list, rcp_url: str):
         for line in lines:
             f.write(line)
 
-    subprocess.run('yarn build', shell=True)
+    subprocess.run('yarn --cwd {YARN_WORKING_DIR} build', shell=True)
 
 
 async def create_market(base_token: dict, quote_token: dict, lot_size: int, max_tick_size: int, makeTxVersion = True):
@@ -175,7 +177,7 @@ async def create_market(base_token: dict, quote_token: dict, lot_size: int, max_
     }
 
     """
-    output = subprocess.run(f'yarn start js/src/utilsCreateMarket.js {base_token["address"]} {base_token["decimals"]} {base_token["symbol"]} {quote_token["address"]} {quote_token["decimals"]} {quote_token["symbol"]} {lot_size} {max_tick_size} {makeTxVersion}', shell=True, capture_output=True)
+    output = subprocess.run(f'yarn --cwd {YARN_WORKING_DIR} start js/src/utilsCreateMarket.js {base_token["address"]} {base_token["decimals"]} {base_token["symbol"]} {quote_token["address"]} {quote_token["decimals"]} {quote_token["symbol"]} {lot_size} {max_tick_size} {makeTxVersion}', shell=True, capture_output=True)
     stdout_lines = [str(line) for line in output.stdout.splitlines()]
     error_lines = [str(line) for line in output.stderr.splitlines()]
     print(stdout_lines)
@@ -219,7 +221,7 @@ async def create_liquidity_pool(base_token: dict, quote_token: dict, target_mark
     }
     """
 
-    output = subprocess.run(f'yarn start js/src/ammCreatePool.js {base_token["address"]} {base_token["decimals"]} {base_token["symbol"]} {quote_token["address"]} {quote_token["decimals"]} {quote_token["symbol"]} {target_market_id} {add_base_amount} {add_quote_amount}', shell=True, capture_output=True)
+    output = subprocess.run(f'yarn --cwd {YARN_WORKING_DIR} start js/src/ammCreatePool.js {base_token["address"]} {base_token["decimals"]} {base_token["symbol"]} {quote_token["address"]} {quote_token["decimals"]} {quote_token["symbol"]} {target_market_id} {add_base_amount} {add_quote_amount}', shell=True, capture_output=True)
     stdout_lines = [str(line) for line in output.stdout.splitlines()]
     error_lines = [str(line) for line in output.stderr.splitlines()]
     print(stdout_lines)
@@ -259,7 +261,7 @@ async def swap(base_token: dict, quote_token: dict, target_pool: str, input_toke
     }
     """
 
-    output = subprocess.run(f'yarn start js/src/swapOnlyAmm.js {base_token["address"]} {base_token["decimals"]} {base_token["symbol"]} {quote_token["address"]} {quote_token["decimals"]} {quote_token["symbol"]} {target_pool} {input_token_amount}', shell=True, capture_output=True)
+    output = subprocess.run(f'yarn --cwd {YARN_WORKING_DIR} start js/src/swapOnlyAmm.js {base_token["address"]} {base_token["decimals"]} {base_token["symbol"]} {quote_token["address"]} {quote_token["decimals"]} {quote_token["symbol"]} {target_pool} {input_token_amount}', shell=True, capture_output=True)
     stdout_lines = [str(line) for line in output.stdout.splitlines()]
     error_lines = [str(line) for line in output.stderr.splitlines()]
     print(stdout_lines)
@@ -290,7 +292,7 @@ async def get_price_sdk(base_token: dict, quote_token: dict, target_pool: str, i
 
     """
 
-    output = subprocess.run(f'yarn start js/src/getPrice.js {target_pool} {base_token["address"]} {base_token["decimals"]} {base_token["symbol"]} {quote_token["address"]} {quote_token["decimals"]} {quote_token["symbol"]} {input_token_amount}', shell=True, capture_output=True)
+    output = subprocess.run(f'yarn --cwd {YARN_WORKING_DIR} start js/src/getPrice.js {target_pool} {base_token["address"]} {base_token["decimals"]} {base_token["symbol"]} {quote_token["address"]} {quote_token["decimals"]} {quote_token["symbol"]} {input_token_amount}', shell=True, capture_output=True)
     stdout_lines = [str(line) for line in output.stdout.splitlines()]
     error_lines = [str(line) for line in output.stderr.splitlines()]
     print(stdout_lines)
@@ -328,7 +330,7 @@ async def remove_liquidity(token: dict, token_amount:int, target_pool: str):
     }
     """
 
-    output = subprocess.run(f'yarn start js/src/ammRemoveLiquidity.js {token["address"]} {token["decimals"]} {token["symbol"]} {token_amount} {target_pool}', shell=True, capture_output=True)
+    output = subprocess.run(f'yarn --cwd {YARN_WORKING_DIR} start js/src/ammRemoveLiquidity.js {token["address"]} {token["decimals"]} {token["symbol"]} {token_amount} {target_pool}', shell=True, capture_output=True)
     stdout_lines = [str(line) for line in output.stdout.splitlines()]
     error_lines = [str(line) for line in output.stderr.splitlines()]
     print(stdout_lines)
