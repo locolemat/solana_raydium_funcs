@@ -93,7 +93,6 @@ async function ammCreatePool(input: TestTxInputInfo): Promise<{ txids: string[] 
 }
 
 async function howToUse() {
-  try{
     const baseToken = new Token(TOKEN_PROGRAM_ID, new PublicKey(process.argv[2]), Number(process.argv[3]), process.argv[4], process.argv[4]) // USDC
     const quoteToken = new Token(TOKEN_PROGRAM_ID, new PublicKey(process.argv[5]), Number(process.argv[6]), process.argv[7], process.argv[7]) // RAY
     const targetMargetId = new PublicKey(process.argv[8])
@@ -125,17 +124,9 @@ async function howToUse() {
       /** continue with txids */
       console.log('txids', txids)
     })
-  }
-
-  catch(e){
-    if (typeof e === "string"){
-      console.log(e)
-    }
-    else if (e instanceof Error){
-      console.log('ERROR: ' + e.message)
-    }
-  }
-  
+    .catch((error) =>{
+      console.error('ERROR:', error)
+    })
 }
 
 howToUse()

@@ -7,7 +7,9 @@ import {
   Percent,
   Token,
   TokenAmount,
-  TOKEN_PROGRAM_ID
+  TOKEN_PROGRAM_ID,
+  Currency,
+  Price
 } from '@raydium-io/raydium-sdk';
 import { Keypair, PublicKey } from '@solana/web3.js';
 

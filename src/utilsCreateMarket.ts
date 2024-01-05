@@ -39,31 +39,24 @@ export async function createMarket(input: TestTxInputInfo) {
 }
 
 async function howToUse() {
-  try{
   	const baseToken = new Token(TOKEN_PROGRAM_ID, new PublicKey(process.argv[2]), Number(process.argv[3]), process.argv[4], process.argv[4])
   	const quoteToken = new Token(TOKEN_PROGRAM_ID, new PublicKey(process.argv[5]), Number(process.argv[6]), process.argv[7], process.argv[7])
   	const lotSize = Number(process.argv[8])
 	  const tickSize = Number(process.argv[9])
 	
 	createMarket({
-	baseToken,
-	quoteToken,
-	wallet: wallet,
-	lotSize,
-	tickSize
+  	baseToken,
+  	quoteToken,
+  	wallet: wallet,
+  	lotSize,
+  	tickSize
 	}).then(({ txids }) => {
 		/** continue with txids */
 		console.log('txids', txids)
 	})
-  }
-  catch(e){
-  	if (typeof e === "string"){
-		console.log(e)
-	}
-	else if (e instanceof Error){
-		console.log('ERROR: ' + e.message)
-	}
-  }
+  .catch((error) =>{
+    console.error('ERROR:', error)
+  })
 }
 
 howToUse()

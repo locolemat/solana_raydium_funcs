@@ -14,6 +14,13 @@ from solders.pubkey import Pubkey
 import requests, json, os, sys, base58, subprocess, asyncio
 
 
+def get_relative_price(price_a: float, price_b: float):
+    """
+    Приводит цену из USD в относительную цену (сколько Б я получу за А?)
+    """
+    return price_a/price_b
+
+
 def get_secret_key(private_key: str):
     """
     Превращает некорректно называемый в Солане private_key (по факту это secret_key)
@@ -168,16 +175,24 @@ async def create_market(base_token: dict, quote_token: dict, lot_size: int, max_
     }
 
     """
-    output = subprocess.run(f'yarn start ./js/src/utilsCreateMarket.js {base_token["address"]} {base_token["decimals"]} {base_token["symbol"]} {quote_token["address"]} {quote_token["decimals"]} {quote_token["symbol"]} {lot_size} {max_tick_size} {makeTxVersion}', shell=True, capture_output=True)
+    output = subprocess.run(f'yarn start js/src/utilsCreateMarket.js {base_token["address"]} {base_token["decimals"]} {base_token["symbol"]} {quote_token["address"]} {quote_token["decimals"]} {quote_token["symbol"]} {lot_size} {max_tick_size} {makeTxVersion}', shell=True, capture_output=True)
     stdout_lines = [str(line) for line in output.stdout.splitlines()]
+    error_lines = [str(line) for line in output.stderr.splitlines()]
+    print(stdout_lines)
+    print(output.stderr)
+    
+    success = True
+    error = ''
     market_id = ''
-    for i in stdout_lines:
+    for i in error_lines:
         if i.find('ERROR: ') != -1:
-            return {'success':False, 'error': i[2:-1]}
-        if i.find('txids') != -1:
-            market_id = i[2:-1]
+            success = False
+            error = i
 
-    return {'success': True, 'market_id': market_id}
+    if success:
+        market_id = stdout_lines
+
+    return {'success': success, 'error': error, 'market_id': market_id}
 
 
 
@@ -199,19 +214,29 @@ async def create_liquidity_pool(base_token: dict, quote_token: dict, target_mark
 
     {
         "success" bool: удалось ли создать пул,
-        "error" str: ошибка (если она есть)
+        "error" str: ошибка (если она есть),
+        "lp_mint" str: информация о созданном пуле
     }
     """
 
-    output = subprocess.run(f'yarn start ./js/src/ammCreatePool.js {base_token["address"]} {base_token["decimals"]} {base_token["symbol"]} {quote_token["address"]} {quote_token["decimals"]} {quote_token["symbol"]} {target_market_id} {add_base_amount} {add_quote_amount}', shell=True, capture_output=True)
+    output = subprocess.run(f'yarn start js/src/ammCreatePool.js {base_token["address"]} {base_token["decimals"]} {base_token["symbol"]} {quote_token["address"]} {quote_token["decimals"]} {quote_token["symbol"]} {target_market_id} {add_base_amount} {add_quote_amount}', shell=True, capture_output=True)
     stdout_lines = [str(line) for line in output.stdout.splitlines()]
-    for i in stdout_lines:
+    error_lines = [str(line) for line in output.stderr.splitlines()]
+    print(stdout_lines)
+    print(output.stderr)
+    
+    success = True
+    error = ''
+    lp_mint = ''
+    for i in error_lines:
         if i.find('ERROR: ') != -1:
-            return {'success':False, 'error': i[2:-1]}
-        if i.find('txids') != -1:
-            market_id = i[2:-1]
+            success = False
+            error = i
 
-    return {'success': True, 'error': ''}
+    if success:
+        lp_mint = stdout_lines
+
+    return {'success': success, 'error': error, 'lp_mint': lp_mint}
 
 async def swap(base_token: dict, quote_token: dict, target_pool: str, input_token_amount: int):
     """
@@ -234,11 +259,11 @@ async def swap(base_token: dict, quote_token: dict, target_pool: str, input_toke
     }
     """
 
-    output = subprocess.run(f'yarn start .js/src/swapOnlyAmm.js {base_token["address"]} {base_token["decimals"]} {base_token["symbol"]} {quote_token["address"]} {quote_token["decimals"]} {quote_token["symbol"]} {target_pool} {input_token_amount}', shell=True, capture_output=True)
+    output = subprocess.run(f'yarn start js/src/swapOnlyAmm.js {base_token["address"]} {base_token["decimals"]} {base_token["symbol"]} {quote_token["address"]} {quote_token["decimals"]} {quote_token["symbol"]} {target_pool} {input_token_amount}', shell=True, capture_output=True)
     stdout_lines = [str(line) for line in output.stdout.splitlines()]
     error_lines = [str(line) for line in output.stderr.splitlines()]
-    #print(stdout_lines)
-    #print(output.stderr)
+    print(stdout_lines)
+    print(output.stderr)
     
     success = True
     error = ''
@@ -249,6 +274,74 @@ async def swap(base_token: dict, quote_token: dict, target_pool: str, input_toke
 
     return {'success': success, 'error': error}
 
+
+async def get_price_sdk(base_token: dict, quote_token: dict, target_pool: str, input_token_amount: int):
+    """
+    Взять цену пары из СДК. 
+
+    base_token и quote_token = {
+        "address" str: "<адрес_токена>",
+        "decimals" int: n,
+        "symbol" str: "<символ_токена>"
+    }
+
+    target_pool str: адрес пула
+    input_token_amount int: количество токенов
+
+    """
+
+    output = subprocess.run(f'yarn start js/src/getPrice.js {target_pool} {base_token["address"]} {base_token["decimals"]} {base_token["symbol"]} {quote_token["address"]} {quote_token["decimals"]} {quote_token["symbol"]} {input_token_amount}', shell=True, capture_output=True)
+    stdout_lines = [str(line) for line in output.stdout.splitlines()]
+    error_lines = [str(line) for line in output.stderr.splitlines()]
+    print(stdout_lines)
+    print(output.stderr)
+    
+    success = True
+    error = ''
+    price_info = stdout_lines
+    for i in error_lines:
+        if i.find('ERROR: ') != -1:
+            success = False
+            error = i
+
+    return {'success': success, 'error': error, 'price_info': price_info}
+
+
+async def remove_liquidity(token: dict, token_amount:int, target_pool: str):
+    """
+    .
+
+    token = {
+        "address" str: "<адрес_токена>",
+        "decimals" int: n,
+        "symbol" str: "<символ_токена>"
+    }
+
+    token_amount int: сколько токенов убирать из пула
+    target_pool str: адрес пула
+
+    Возвращает словарь вида:
+
+    {
+        "success" bool: удалось ли убрать токены из пула,
+        "error" str: ошибка (если она есть)
+    }
+    """
+
+    output = subprocess.run(f'yarn start js/src/ammRemoveLiquidity.js {token["address"]} {token["decimals"]} {token["symbol"]} {token_amount} {target_pool}', shell=True, capture_output=True)
+    stdout_lines = [str(line) for line in output.stdout.splitlines()]
+    error_lines = [str(line) for line in output.stderr.splitlines()]
+    print(stdout_lines)
+    print(output.stderr)
+    
+    success = True
+    error = ''
+    for i in error_lines:
+        if i.find('ERROR: ') != -1:
+            success = False
+            error = i
+
+    return {'success': success, 'error': error}
 
 asyncio.run(connect('5YsYUzTAHjDLLUU1DjQ5wMtRMfGsDDPvfNzeL1bfwXA3SJrZuvF9XP6ozQqWDfBgcuM3fkBpH3ddC4VTDapueScC', 'https://api.mainnet-beta.solana.com'))
 token1 = {
