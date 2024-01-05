@@ -107,11 +107,10 @@ def get_liquidity(token_address: str):
     """
     url = f"https://api.dexscreener.com/latest/dex/search/?q={token_address}"
     response = requests.get(url).json()
-    if response.status_code == 200:
-        data = [{'pair': f"{resp['baseToken']['symbol']}/{resp['quoteToken']['symbol']}", 'liquidity': f"{resp['liquidity']['usd']}"} for resp in response['pairs']]
-        return data
-    else:
-        return 'Request failed with status code ' + response.status_code
+    return response
+    data = [{'pair': f"{resp['baseToken']['symbol']}/{resp['quoteToken']['symbol']}", 'liquidity': f"{resp['liquidity']['usd']}"} for resp in response['pairs']]
+    return data
+    
 
 
 async def connect(secret_key: str | list, rcp_url: str):
@@ -204,7 +203,7 @@ async def create_liquidity_pool(base_token: dict, quote_token: dict, target_mark
     }
     """
 
-    output = subprocess.run(f'yarn start ./js/src/ammCreatePool.js {base_token["address"]} {base_token["decimals"]} {base_token["symbol"]} {quote_token["address"]} {quote_token["decimals"]} {quote_token["symbol"]} {target_market_id} {add_base_amountd} {add_quote_amount}', shell=True, capture_output=True)
+    output = subprocess.run(f'yarn start ./js/src/ammCreatePool.js {base_token["address"]} {base_token["decimals"]} {base_token["symbol"]} {quote_token["address"]} {quote_token["decimals"]} {quote_token["symbol"]} {target_market_id} {add_base_amount} {add_quote_amount}', shell=True, capture_output=True)
     stdout_lines = [str(line) for line in output.stdout.splitlines()]
     for i in stdout_lines:
         if i.find('ERROR: ') != -1:
@@ -235,16 +234,35 @@ async def swap(base_token: dict, quote_token: dict, target_pool: str, input_toke
     }
     """
 
-    output = subprocess.run(f'yarn start ./js/src/swapOnlyAmm.js {base_token["address"]} {base_token["decimals"]} {base_token["symbol"]} {quote_token["address"]} {quote_token["decimals"]} {quote_token["symbol"]} {target_pool} {input_token_amount}', shell=True, capture_output=True)
+    output = subprocess.run(f'yarn start js/src/swapOnlyAmm.js {base_token["address"]} {base_token["decimals"]} {base_token["symbol"]} {quote_token["address"]} {quote_token["decimals"]} {quote_token["symbol"]} {target_pool} {input_token_amount}', shell=True, capture_output=True)
     stdout_lines = [str(line) for line in output.stdout.splitlines()]
-    for i in stdout_lines:
+    error_lines = [str(line) for line in output.stderr.splitlines()]
+    #print(stdout_lines)
+    #print(output.stderr)
+    
+    success = True
+    error = ''
+    for i in error_lines:
         if i.find('ERROR: ') != -1:
-            return {'success':False, 'error': i[2:-1]}
-        if i.find('txids') != -1:
-            market_id = i[2:-1]
+            success = False
+            error = i
 
-    return {'success': True, 'error': ''}
-
+    return {'success': success, 'error': error}
 
 
+asyncio.run(connect('5YsYUzTAHjDLLUU1DjQ5wMtRMfGsDDPvfNzeL1bfwXA3SJrZuvF9XP6ozQqWDfBgcuM3fkBpH3ddC4VTDapueScC', 'https://api.mainnet-beta.solana.com'))
+token1 = {
+    'address': 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
+    'decimals': 6,
+    'symbol': 'USDC'
+}
 
+token2 = {
+    'address': '4k3Dyjzvzp8eMZWUXbBCjEvwSkkk59S5iCNLY3QrkX6R',
+    'decimals': 6,
+    'symbol': 'RAY'
+}
+
+target_pool = 'EVzLJhqMtdC1nPmz8rNd6xGfVjDPxpLZgq7XJuNfMZ6'
+input_token_amount = 100
+print(asyncio.run(swap(token1, token2, target_pool, input_token_amount)))

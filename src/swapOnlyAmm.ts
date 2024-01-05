@@ -6,11 +6,10 @@ import {
   LiquidityPoolKeys,
   Percent,
   Token,
-  TOKEN_PROGRAM_ID,
   TokenAmount,
+  TOKEN_PROGRAM_ID
 } from '@raydium-io/raydium-sdk';
 import { Keypair, PublicKey } from '@solana/web3.js';
-
 
 import {
   connection,
@@ -69,34 +68,37 @@ async function swapOnlyAmm(input: TestTxInputInfo) {
 }
 
 async function howToUse() {
-  try{
-    const inputToken = new Token(TOKEN_PROGRAM_ID, new PublicKey(process.argv[2]), Number(process.argv[3]), process.argv[4], process.argv[4]) // USDC
-    const outputToken = new Token(TOKEN_PROGRAM_ID, new PublicKey(process.argv[5]), Number(process.argv[6]), process.argv[7], process.argv[7]) // RAY
-    const targetPool = process.argv[8] // USDC-RAY pool
-    const inputTokenAmount = new TokenAmount(inputToken, Number(process.argv[9]))
-    const slippage = new Percent(1, 100)
-    const walletTokenAccounts = await getWalletTokenAccount(connection, wallet.publicKey)
 
-    swapOnlyAmm({
-      outputToken,
-      targetPool,
-      inputTokenAmount,
-      slippage,
-      walletTokenAccounts,
-      wallet: wallet,
-    }).then(({ txids }) => {
-      /** continue with txids */
-      console.log('txids', txids)
-    }) 
-  }
+  /*
+  const inputToken = DEFAULT_TOKEN.USDC // USDC
+  const outputToken = DEFAULT_TOKEN.RAY // RAY
+  const targetPool = 'EVzLJhqMtdC1nPmz8rNd6xGfVjDPxpLZgq7XJuNfMZ6' // USDC-RAY pool
+  const inputTokenAmount = new TokenAmount(inputToken, 10000)
+  const slippage = new Percent(1, 100)
+  const walletTokenAccounts = await getWalletTokenAccount(connection, wallet.publicKey)
+  */
 
-  catch(e){
-    if (typeof e === "string"){
-      console.log(e)
-    }
-    else if (e instanceof Error){
-      console.log('ERROR: ' + e.message)
-    }
-  }
-  
+  const inputToken = new Token(TOKEN_PROGRAM_ID, new PublicKey(process.argv[2]), Number(process.argv[3]), process.argv[4], process.argv[4]) // USDC
+  const outputToken = new Token(TOKEN_PROGRAM_ID, new PublicKey(process.argv[5]), Number(process.argv[6]), process.argv[7], process.argv[7]) // RAY
+  const targetPool = process.argv[8] // USDC-RAY pool
+  const inputTokenAmount = new TokenAmount(inputToken, Number(process.argv[9]))
+  const slippage = new Percent(1, 100)
+  const walletTokenAccounts = await getWalletTokenAccount(connection, wallet.publicKey)
+
+  swapOnlyAmm({
+    outputToken,
+    targetPool,
+    inputTokenAmount,
+    slippage,
+    walletTokenAccounts,
+    wallet: wallet,
+  }).then(({ txids }) => {
+    /** continue with txids */
+    console.log('txids', txids)
+  })
+  .catch((error) =>{
+    console.error('ERROR:', error)
+  })
 }
+
+howToUse()
