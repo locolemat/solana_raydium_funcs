@@ -234,7 +234,7 @@ async def swap(base_token: dict, quote_token: dict, target_pool: str, input_toke
     }
     """
 
-    output = subprocess.run(f'yarn start js/src/swapOnlyAmm.js {base_token["address"]} {base_token["decimals"]} {base_token["symbol"]} {quote_token["address"]} {quote_token["decimals"]} {quote_token["symbol"]} {target_pool} {input_token_amount}', shell=True, capture_output=True)
+    output = subprocess.run(f'yarn start .js/src/swapOnlyAmm.js {base_token["address"]} {base_token["decimals"]} {base_token["symbol"]} {quote_token["address"]} {quote_token["decimals"]} {quote_token["symbol"]} {target_pool} {input_token_amount}', shell=True, capture_output=True)
     stdout_lines = [str(line) for line in output.stdout.splitlines()]
     error_lines = [str(line) for line in output.stderr.splitlines()]
     #print(stdout_lines)
